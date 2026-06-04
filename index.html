@@ -164,6 +164,34 @@
     .pbtn { width:30px; font-size:10px; }
     .m-role { font-size:8px; }
   }
+
+  /* MODAL */
+  .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); z-index:1000; align-items:center; justify-content:center; padding:16px; }
+  .modal-overlay.open { display:flex; }
+  .modal-box { background:var(--card); border-radius:var(--radius); width:100%; max-width:640px; max-height:85vh; overflow:hidden; display:flex; flex-direction:column; box-shadow:0 8px 32px rgba(0,0,0,0.2); }
+  .modal-header { padding:16px 20px; border-bottom:1px solid var(--border); display:flex; align-items:center; justify-content:space-between; background:var(--green); }
+  .modal-title { font-family:'Bebas Neue',sans-serif; font-size:20px; letter-spacing:.05em; color:#fff; }
+  .modal-sub { font-size:12px; color:rgba(255,255,255,0.7); margin-top:2px; }
+  .modal-close { background:none; border:none; color:#fff; font-size:22px; cursor:pointer; padding:0 4px; line-height:1; }
+  .modal-body { overflow-y:auto; padding:16px 20px; }
+  .modal-group { margin-bottom:16px; }
+  .modal-group-label { font-family:'Bebas Neue',sans-serif; font-size:15px; color:var(--green); letter-spacing:.05em; margin-bottom:6px; }
+  .modal-match { display:flex; align-items:center; gap:8px; padding:6px 10px; border-radius:6px; margin-bottom:3px; background:var(--bg); font-size:12px; }
+  .modal-match.correct { background:#d4edda; }
+  .modal-match.wrong { background:#f8d7da; }
+  .modal-match.pending { background:#f5f4f0; }
+  .modal-teams { flex:1; font-weight:500; }
+  .modal-pick { min-width:80px; text-align:center; }
+  .pick-badge { display:inline-block; padding:2px 8px; border-radius:4px; font-size:11px; font-weight:700; }
+  .pick-badge.L { background:var(--green); color:#fff; }
+  .pick-badge.E { background:var(--orange); color:#fff; }
+  .pick-badge.V { background:var(--red); color:#fff; }
+  .pick-badge.none { background:var(--border); color:var(--muted); }
+  .modal-result { min-width:60px; text-align:right; font-size:11px; color:var(--muted); }
+  .modal-check { min-width:20px; text-align:center; font-size:13px; }
+  .modal-stats { display:flex; gap:12px; padding:12px 20px; border-top:1px solid var(--border); background:var(--bg); flex-wrap:wrap; }
+  .modal-stat { font-size:13px; color:var(--muted); }
+  .modal-stat strong { color:var(--text); }
 </style>
 </head>
 <body>
@@ -273,6 +301,21 @@
     </div>
   </div>
 
+
+<!-- MODAL VER QUINIELA -->
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeModal()">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title" id="modal-title">Quiniela de ...</div>
+        <div class="modal-sub" id="modal-sub"></div>
+      </div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modal-body"></div>
+    <div class="modal-stats" id="modal-stats"></div>
+  </div>
+</div>
 </div>
 
 <script>
@@ -635,7 +678,7 @@ function renderAdminPanel(){
   if(!entries.length){ew.innerHTML='<div class="lb-list"><div class="empty-state">Sin participantes aún.</div></div>';return;}
   const scored=entries.map(e=>({name:e.name,pts:calcScore(e.picks),total:Object.keys(e.picks).length})).sort((a,b)=>b.pts-a.pts);
   let eh='<div class="lb-list"><div class="lb-head"><span class="lb-pos">#</span><span class="lb-name">Nombre</span><span class="lb-picks">Picks</span><span class="lb-pts">Pts</span><span style="min-width:36px"></span></div>';
-  scored.forEach((e,i)=>{eh+=`<div class="lb-row"><span class="lb-pos">${i+1}</span><span class="lb-name">${e.name}</span><span class="lb-picks">${e.total}/72</span><span class="lb-pts">${e.pts} <span>pts</span></span><button onclick="deleteEntry('${e.name.replace(/'/g,"\\'")}')" title="Borrar a ${e.name}" style="padding:4px 8px;background:none;border:1.5px solid #b91c1c;border-radius:6px;color:#b91c1c;font-size:11px;cursor:pointer;flex-shrink:0;font-family:inherit;font-weight:600">🗑️</button></div>`;});
+  scored.forEach((e,i)=>{eh+=`<div class="lb-row"><span class="lb-pos">${i+1}</span><span class="lb-name">${e.name}</span><span class="lb-picks">${e.total}/72</span><span class="lb-pts">${e.pts} <span>pts</span></span><div style="display:flex;gap:4px;flex-shrink:0"><button onclick="viewEntry('${e.name.replace(/'/g,"\\'")}')" title="Ver quiniela" style="padding:4px 8px;background:none;border:1.5px solid var(--green);border-radius:6px;color:var(--green);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">👁️ Ver</button><button onclick="deleteEntry('${e.name.replace(/'/g,"\\'")}')" title="Borrar" style="padding:4px 8px;background:none;border:1.5px solid #b91c1c;border-radius:6px;color:#b91c1c;font-size:11px;cursor:pointer;font-family:inherit;font-weight:600">🗑️</button></div></div>`;});
   ew.innerHTML=eh+'</div>';
 }
 
@@ -644,6 +687,52 @@ async function setResult(id,val){
   if(results[id]===val) delete results[id]; else results[id]=val;
   renderAdminPanel();
   await saveCloud();
+}
+
+function closeModal(){
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+
+function viewEntry(name){
+  const entry = entries.find(e=>e.name===name);
+  if(!entry) return;
+  const pts = Object.entries(results).filter(([id,res])=>entry.picks[String(id)]===res).length;
+  const played = Object.keys(results).length;
+  document.getElementById('modal-title').textContent = name;
+  document.getElementById('modal-sub').textContent = `${Object.keys(entry.picks).length}/72 pronósticos · ${pts} puntos`;
+
+  const PICK_LABEL = {L:'Local', E:'Empate', V:'Visita'};
+  let html='';
+  GROUPS.forEach(g=>{
+    html+=`<div class="modal-group"><div class="modal-group-label">${g.name}</div>`;
+    g.matches.forEach(m=>{
+      const pick = entry.picks[String(m.id)];
+      const real = results[String(m.id)];
+      let rowClass = 'pending';
+      let checkIcon = '';
+      if(real && pick){
+        rowClass = pick===real ? 'correct' : 'wrong';
+        checkIcon = pick===real ? '✅' : '❌';
+      }
+      const pickLabel = pick ? PICK_LABEL[pick] : '—';
+      const realLabel = real ? `(Real: ${PICK_LABEL[real]})` : '';
+      html+=`<div class="modal-match ${rowClass}">
+        <span class="modal-check">${checkIcon}</span>
+        <span class="modal-teams">${m.local} vs ${m.visit}</span>
+        <span class="modal-pick"><span class="pick-badge ${pick||'none'}">${pickLabel}</span></span>
+        <span class="modal-result">${realLabel}</span>
+      </div>`;
+    });
+    html+='</div>';
+  });
+  document.getElementById('modal-body').innerHTML = html;
+  document.getElementById('modal-stats').innerHTML = `
+    <span class="modal-stat">Picks: <strong>${Object.keys(entry.picks).length}/72</strong></span>
+    <span class="modal-stat">Partidos jugados: <strong>${played}</strong></span>
+    <span class="modal-stat">Aciertos: <strong>${pts}</strong></span>
+    <span class="modal-stat">Registrado: <strong>${new Date(entry.ts).toLocaleDateString('es-MX')}</strong></span>
+  `;
+  document.getElementById('modal-overlay').classList.add('open');
 }
 
 async function deleteEntry(name){
