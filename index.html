@@ -172,7 +172,7 @@
   <div class="header-inner">
     <div>
       <div class="header-title">Quiniela <span>Mundial</span> 2026</div>
-      <div class="header-sub">48 partidos · Fase de Grupos · Jun 11 – Jun 27</div>
+      <div class="header-sub">72 partidos · Fase de Grupos · Jun 11 – Jun 27</div>
     </div>
     <div class="header-badge">⚽ Oficina</div>
   </div>
@@ -192,7 +192,7 @@
   <div id="view-form" class="view active">
     <div class="print-header">
       <h1>⚽ Quiniela Mundial 2026</h1>
-      <p id="print-name-line">Fase de Grupos · 48 partidos</p>
+      <p id="print-name-line">Fase de Grupos · 72 partidos</p>
     </div>
 
     <div id="lock-banner-wrap"></div>
@@ -214,7 +214,7 @@
     <div class="card no-print progress-card">
       <div class="prog-row">
         <span class="prog-label">Partidos pronosticados</span>
-        <span class="prog-num" id="prog-num">0 / 48</span>
+        <span class="prog-num" id="prog-num">0 / 72</span>
       </div>
       <div class="bar-bg"><div class="bar-fill" id="prog-bar" style="width:0%"></div></div>
     </div>
@@ -553,8 +553,8 @@ function setPick(id,val) {
 
 function updateProgress() {
   const done=Object.keys(picks).length;
-  document.getElementById('prog-num').textContent=done+' / 48';
-  document.getElementById('prog-bar').style.width=Math.round(done/48*100)+'%';
+  document.getElementById('prog-num').textContent=done+' / 72';
+  document.getElementById('prog-bar').style.width=Math.round(done/72*100)+'%';
 }
 
 function saveName() {
@@ -575,7 +575,7 @@ async function submitEntry() {
   if(isLocked()){alert('La quiniela ya está cerrada.');return;}
   if(!playerName){alert('Primero guarda tu nombre');return;}
   const done=Object.keys(picks).length;
-  if(done<48&&!confirm(`Tienes ${done}/48 pronósticos. ¿Registrar de todas formas?`)) return;
+  if(done<72&&!confirm(`Tienes ${done}/72 pronósticos. ¿Registrar de todas formas?`)) return;
   setSyncStatus('loading','Guardando...');
   await loadCloud();
   const idx=entries.findIndex(e=>e.name===playerName);
@@ -597,7 +597,7 @@ function resetPicks() {
 
 function printQuiniela() {
   const name=playerName||document.getElementById('player-name').value.trim()||'Sin nombre';
-  document.getElementById('print-name-line').textContent=`Participante: ${name} · Fase de Grupos · 48 partidos`;
+  document.getElementById('print-name-line').textContent=`Participante: ${name} · Fase de Grupos · 72 partidos`;
   window.print();
 }
 
@@ -614,7 +614,7 @@ function renderLeaderboard() {
   const resCount=Object.keys(results).length;
   statsWrap.innerHTML=`
     <div class="stat-card"><div class="s-label">Participantes</div><div class="s-val">${entries.length}</div></div>
-    <div class="stat-card"><div class="s-label">Partidos jugados</div><div class="s-val">${resCount}/48</div></div>
+    <div class="stat-card"><div class="s-label">Partidos jugados</div><div class="s-val">${resCount}/72</div></div>
     <div class="stat-card"><div class="s-label">Estado</div><div class="s-val">${isLocked()?'CERRADA':'ABIERTA'}</div></div>
   `;
   if(!entries.length){lbWrap.innerHTML='<div class="lb-list"><div class="empty-state">Aún no hay participantes registrados.</div></div>';return;}
@@ -623,7 +623,7 @@ function renderLeaderboard() {
   scored.forEach((e,i)=>{
     const rc=i===0?'top1':i===1?'top2':i===2?'top3':'';
     const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
-    html+=`<div class="lb-row ${rc}"><span class="lb-pos">${medal}</span><span class="lb-name">${e.name}</span><span class="lb-picks">${e.total}/48</span><span class="lb-pts">${e.pts} <span>pts</span></span></div>`;
+    html+=`<div class="lb-row ${rc}"><span class="lb-pos">${medal}</span><span class="lb-name">${e.name}</span><span class="lb-picks">${e.total}/72</span><span class="lb-pts">${e.pts} <span>pts</span></span></div>`;
   });
   lbWrap.innerHTML=html+'</div>';
 }
@@ -673,8 +673,8 @@ function renderAdminPanel(){
   const ew=document.getElementById('admin-entries-wrap');
   if(!entries.length){ew.innerHTML='<div class="lb-list"><div class="empty-state">Sin participantes aún.</div></div>';return;}
   const scored=entries.map(e=>({name:e.name,pts:calcScore(e.picks),total:Object.keys(e.picks).length})).sort((a,b)=>b.pts-a.pts);
-  let eh='<div class="lb-list"><div class="lb-head"><span class="lb-pos">#</span><span class="lb-name">Nombre</span><span class="lb-picks">Picks</span><span class="lb-pts">Pts</span></div>';
-  scored.forEach((e,i)=>{eh+=`<div class="lb-row"><span class="lb-pos">${i+1}</span><span class="lb-name">${e.name}</span><span class="lb-picks">${e.total}/48</span><span class="lb-pts">${e.pts} <span>pts</span></span></div>`;});
+  let eh='<div class="lb-list"><div class="lb-head"><span class="lb-pos">#</span><span class="lb-name">Nombre</span><span class="lb-picks">Picks</span><span class="lb-pts">Pts</span><span style="min-width:36px"></span></div>';
+  scored.forEach((e,i)=>{eh+=`<div class="lb-row"><span class="lb-pos">${i+1}</span><span class="lb-name">${e.name}</span><span class="lb-picks">${e.total}/72</span><span class="lb-pts">${e.pts} <span>pts</span></span><button onclick="deleteEntry('${e.name.replace(/'/g,"\\'")}')" title="Borrar a ${e.name}" style="padding:4px 8px;background:none;border:1.5px solid #b91c1c;border-radius:6px;color:#b91c1c;font-size:11px;cursor:pointer;flex-shrink:0;font-family:inherit;font-weight:600">🗑️</button></div>`;});
   ew.innerHTML=eh+'</div>';
 }
 
@@ -683,6 +683,13 @@ async function setResult(id,val){
   if(results[id]===val) delete results[id]; else results[id]=val;
   renderAdminPanel();
   await saveCloud();
+}
+
+async function deleteEntry(name){
+  if(!confirm('¿Borrar la quiniela de ' + name + '?')) return;
+  entries = entries.filter(e => e.name !== name);
+  await saveCloud();
+  renderAdminPanel();
 }
 
 async function clearAllEntries(){
