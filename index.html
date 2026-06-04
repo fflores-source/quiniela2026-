@@ -623,11 +623,11 @@ function renderLeaderboard() {
   `;
   if(!entries.length){lbWrap.innerHTML='<div class="lb-list"><div class="empty-state">Aún no hay participantes registrados.</div></div>';return;}
   const scored=entries.map(e=>({name:e.name,pts:calcScore(e.picks),total:Object.keys(e.picks).length})).sort((a,b)=>b.pts-a.pts||b.total-a.total);
-  let html='<div class="lb-list"><div class="lb-head"><span class="lb-pos">#</span><span class="lb-name">Nombre</span><span class="lb-picks">Picks</span><span class="lb-pts">Puntos</span></div>';
+  let html='<div class="lb-list"><div class="lb-head"><span class="lb-pos">#</span><span class="lb-name">Nombre</span><span class="lb-picks">Picks</span><span class="lb-pts">Puntos</span><span style="min-width:60px"></span></div>';
   scored.forEach((e,i)=>{
     const rc=i===0?'top1':i===1?'top2':i===2?'top3':'';
     const medal=i===0?'🥇':i===1?'🥈':i===2?'🥉':i+1;
-    html+=`<div class="lb-row ${rc}"><span class="lb-pos">${medal}</span><span class="lb-name">${e.name}</span><span class="lb-picks">${e.total}/72</span><span class="lb-pts">${e.pts} <span>pts</span></span></div>`;
+    html+=`<div class="lb-row ${rc}"><span class="lb-pos">${medal}</span><span class="lb-name">${e.name}</span><span class="lb-picks">${e.total}/72</span><span class="lb-pts">${e.pts} <span>pts</span></span><button onclick="viewEntry('${e.name.replace(/'/g,"\\'")}')" style="padding:4px 10px;background:none;border:1.5px solid var(--green);border-radius:6px;color:var(--green);font-size:11px;cursor:pointer;font-family:inherit;font-weight:600;flex-shrink:0">👁️ Ver</button></div>`;
   });
   lbWrap.innerHTML=html+'</div>';
 }
