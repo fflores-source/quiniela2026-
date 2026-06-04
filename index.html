@@ -278,7 +278,6 @@
 <script>
 // ===================== CONFIG =====================
 const API_KEY = '$2a$10$Z45aa86hLhgrMS.p.nSRZuSA5.6qbsRjNT3T.lvElkPBmCrhki8Se';
-const BIN_NAME = 'quiniela-mundial-2026';
 const ADMIN_PW = 'mundial2026admin';
 const LOCK_DATE = new Date('2026-06-11T05:59:59Z');
 
@@ -383,7 +382,8 @@ const GROUPS = [
 ];
 
 // ===================== STATE =====================
-let picks = {}, results = {}, entries = [], playerName = '', binId = null, adminLogged = false;
+const binId = '6a21d676f5f4af5e29ba02fb';
+let picks = {}, results = {}, entries = [], playerName = '', adminLogged = false;
 const LOCAL_KEY = 'wc26_myname';
 
 function isLocked() { return new Date() >= LOCK_DATE; }
@@ -400,74 +400,35 @@ function setSyncStatus(state, text) {
 async function loadCloud() {
   setSyncStatus('loading', 'Sincronizando...');
   try {
-    // Search for existing bin
-    const searchRes = await fetch(`https://api.jsonbin.io/v3/b?q=${BIN_NAME}`, {
-      headers: { 'X-Master-Key': API_KEY }
-    });
-    // Try to list bins and find ours
-    const listRes = await fetch('https://api.jsonbin.io/v3/b?sortBy=createdAt&order=desc', {
-      headers: { 'X-Master-Key': API_KEY }
-    });
-    if(listRes.ok) {
-      const listData = await listRes.json();
-      const found = listData.find && listData.find(b => b.snippetMeta && b.snippetMeta.name === BIN_NAME);
-      if(found) { binId = found.snippetMeta.id; }
-    }
-
-    if(binId) {
-      const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
-        headers: { 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' }
-      });
-      if(res.ok) {
-        const data = await res.json();
-        results = data.results || {};
-        entries = data.entries || [];
-        setSyncStatus('ok', 'Conectado · ' + entries.length + ' participante(s)');
-        return;
-      }
-    }
-    // Bin not found, create it
-    await createBin();
-  } catch(e) {
-    setSyncStatus('err', 'Sin conexión — guardando local');
-  }
-}
-
-async function createBin() {
-  try {
-    const res = await fetch('https://api.jsonbin.io/v3/b', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': API_KEY,
-        'X-Bin-Name': BIN_NAME,
-        'X-Bin-Private': 'true'
-      },
-      body: JSON.stringify({ results:{}, entries:[] })
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}/latest`, {
+      headers: { 'X-Master-Key': API_KEY, 'X-Bin-Meta': 'false' }
     });
     if(res.ok) {
       const data = await res.json();
-      binId = data.metadata.id;
-      setSyncStatus('ok', 'Base de datos creada');
+      results = data.results || {};
+      entries = data.entries || [];
+      setSyncStatus('ok', 'Conectado · ' + entries.length + ' participante(s)');
+    } else {
+      setSyncStatus('err', 'Error al conectar (' + res.status + ')');
     }
   } catch(e) {
-    setSyncStatus('err', 'Error al crear base de datos');
+    setSyncStatus('err', 'Sin conexión');
   }
 }
 
 async function saveCloud() {
-  if(!binId) { await loadCloud(); }
-  if(!binId) return;
+  setSyncStatus('loading', 'Guardando...');
   try {
-    await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
+    const res = await fetch(`https://api.jsonbin.io/v3/b/${binId}`, {
       method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Master-Key': API_KEY
-      },
+      headers: { 'Content-Type': 'application/json', 'X-Master-Key': API_KEY },
       body: JSON.stringify({ results, entries })
     });
-    setSyncStatus('ok', 'Guardado · ' + entries.length + ' participante(s)');
+    if(res.ok) {
+      setSyncStatus('ok', 'Guardado · ' + entries.length + ' participante(s)');
+    } else {
+      setSyncStatus('err', 'Error al guardar (' + res.status + ')');
+    }
   } catch(e) {
     setSyncStatus('err', 'Error al guardar');
   }
